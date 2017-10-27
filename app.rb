@@ -40,7 +40,6 @@ class API < Sinatra::Base
       
       case params['command']
       when '/announce'
-        puts "running annouce command"
         Commands.announce(team_id, user, params['text'])
       end
       
@@ -55,8 +54,8 @@ class API < Sinatra::Base
   class Commands
     
     def self.announce(team, user, text)
-      if $teams[team]['botclient'].users_info(user: user).user.is_admin
-        $teams[team]['botclient'].chat_postMessage channel: SLACK_CONFIG[:read_only_channel], text: "<!everyone> #{text}"
+      if $teams[team][:botclient].users_info(user: user).user.is_admin
+        $teams[team][:botclient].chat_postMessage channel: SLACK_CONFIG[:read_only_channel], text: "<!everyone> #{text}"
       end
     end
     
