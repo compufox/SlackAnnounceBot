@@ -2,6 +2,16 @@ require 'slack-ruby-client'
 require 'sinatra/base'
 require_relative 'db_funcs'
 
+def create_slack_client(slack_api_secret)
+  Slack.configure do |config|
+    config.token = slack_api_secret
+    fail 'Missing API token' unless config.token
+  end
+  Slack::Web::Client.new
+end
+
+
+
 SLACK_CONFIG = {
   slack_client_id: ENV['SLACK_CLIENT_ID'],
   slack_api_secret: ENV['SLACK_API_SECRET'],
@@ -15,14 +25,6 @@ SCOPE = 'bot,commands,channels:history,chat:write:bot,admin,chat:write:user'
 DB_Client = db_from_file
 $teams = {}
 read_db
-
-def create_slack_client(slack_api_secret)
-  Slack.configure do |config|
-    config.token = slack_api_secret
-    fail 'Missing API token' unless config.token
-  end
-  Slack::Web::Client.new
-end
 
 class Auth < Sinatra::Base
 
