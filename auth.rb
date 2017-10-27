@@ -58,7 +58,7 @@ class Auth < Sinatra::Base
       $teams[team_id] = {
         user_access_token: response['access_token'],
         bot_user_id: response['bot']['bot_user_id'],
-        bot_access_token: response['bot']['bot_access_token']
+        bot_access_token: response['bot']['bot_access_token'],
         userclient: create_slack_client(response['access_token']),
         botclient: create_slack_client(response['bot']['bot_access_token'])
       }
