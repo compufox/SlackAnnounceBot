@@ -1,5 +1,6 @@
 require 'sinatra/base'
 require 'slack-ruby-client'
+require_relative 'db_funcs'
 
 class API < Sinatra::Base
   
@@ -19,6 +20,9 @@ class API < Sinatra::Base
         case event_data['type']
         when 'message'
           Events.on_message(team_id, event_data)
+
+        when 'app_uninstall'
+          remove_team team_id
         end
         
         status 200
@@ -52,12 +56,8 @@ class API < Sinatra::Base
     
     def self.announce(team, user, text)
       if $teams[team]['botclient'].users_info(user: user).user.is_admin
-        Commands.post_message(team, '#announcements', text)
+        $teams[team]['botclient'].chat_postMessage channel: SLACK_CONFIG[:read_only_channel], text: "<!everyone> #{text}"
       end
-    end
-    
-    def self.post_message(team, channel, text)
-      $teams[team]['botclient'].chat_postMessage channel: channel, text: "<!everyone> #{text}"
     end
     
   end
@@ -70,9 +70,9 @@ class API < Sinatra::Base
       user = event['user']
 
       unless event['subtype']
-        if $teams[team]['botclient'].channels_id(channel: SLACK_CONFIG[:read_only_channel]).channel.id == channel &&
+        if $teams[team][:botclient].channels_id(channel: SLACK_CONFIG[:read_only_channel]).channel.id == channel &&
            $teams[team][:bot_user_id] != user
-          $teams[team]['userclient'].chat_delete channel: channel, ts: event['ts'], as_user: true
+          $teams[team][:userclient].chat_delete channel: channel, ts: event['ts'], as_user: true
         end
       end
     end

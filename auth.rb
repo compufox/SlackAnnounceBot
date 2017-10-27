@@ -1,5 +1,6 @@
 require 'slack-ruby-client'
 require 'sinatra/base'
+require_relative 'db_funcs'
 
 SLACK_CONFIG = {
   slack_client_id: ENV['SLACK_CLIENT_ID'],
@@ -11,7 +12,9 @@ SLACK_CONFIG = {
 
 SCOPE = 'bot,commands,channels:history,chat:write:bot,admin,chat:write:user'
 
+DB_Client = db_from_file
 $teams = {}
+read_db
 
 def create_slack_client(slack_api_secret)
   Slack.configure do |config|
@@ -56,10 +59,13 @@ class Auth < Sinatra::Base
         user_access_token: response['access_token'],
         bot_user_id: response['bot']['bot_user_id'],
         bot_access_token: response['bot']['bot_access_token']
+        userclient: create_slack_client(response['access_token']),
+        botclient: create_slack_client(response['bot']['bot_access_token'])
       }
-      
-      $teams[team_id]['botclient'] = create_slack_client response['bot']['bot_access_token']
-      $teams[team_id]['userclient'] = create_slack_client response['access_token']
+
+      write_db_data team_id, response['access_token'],
+                    response['bot']['bot_access_token'],
+                    response['bot']['bot_user_id']
       
       status 200
       body 'Auth succeeded!'
